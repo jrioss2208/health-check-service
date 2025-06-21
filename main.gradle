@@ -1,0 +1,138 @@
+apply plugin: 'info.solidsoft.pitest.aggregator'
+
+allprojects {
+    repositories {
+        maven {url 'https://artifactory.apps.bancolombia.com/maven-bancolombia'}
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'info.solidsoft.pitest'
+
+    pitest {
+        targetClasses = ['co.com.bancolombia.*']
+        pitestVersion = '1.16.1'
+        verbose = true
+        outputFormats = ['XML', 'HTML']
+        threads = 8
+        exportLineCoverage = true
+        timestampedReports = false
+        fileExtensionsToFilter.addAll('xml', 'orbit')
+        junit5PluginVersion = '1.2.1'
+        failWhenNoMutations = false
+        jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
+        useClasspathFile = true
+    }
+
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    compileJava.dependsOn validateStructure
+
+    test {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+
+        testImplementation 'io.projectreactor.tools:blockhound-junit-platform:1.0.8.RELEASE'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+        implementation platform('software.amazon.awssdk:bom:2.28.6')
+        //implementation 'javax.validation:validation-api:2.0.1.Final'
+        //implementation 'org.hibernate:hibernate-validator:7.0.4.Final'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'junit:junit:4.13.2'
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor  "org.projectlombok:lombok:${lombokVersion}"
+        testCompileOnly  "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor  "org.projectlombok:lombok:${lombokVersion}"
+        implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+        //implementation ("org.springframework:spring-web:${springWebVersion}")
+
+        //implementation ("ch.qos.logback:logback-classic:${logbackClassic}")
+        //implementation ("ch.qos.logback:logback-core:${logbackClassic}")
+        //implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+        //implementation "org.springframework.security:spring-security-core:${springSecurityVersion}"
+        //implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+        //implementation "io.undertow:undertow-core:${undertowVersion}"
+        //implementation "com.jayway.jsonpath:json-path:${jaywayJsonPathVersion}"
+        //implementation "io.netty:netty-codec-http:${codecHttp}"
+        //implementation ("org.springframework.boot:spring-boot-starter-logging:${springBootVersion}")
+
+
+
+    }
+
+    tasks.withType(Test).configureEach {
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+            jvmArgs += [
+                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+            ]
+        }
+    }
+
+    test.finalizedBy(project.tasks.jacocoTestReport)
+
+    jacocoTestReport {
+        dependsOn = [test, 'pitest'] // Agregamos esta linea a nuestra tarea de jacocoTestReport para que al hacer build ejecute Pitest
+        reports {
+            xml.setRequired true
+            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
+            csv.setRequired false
+            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
+        }
+    }
+
+}
+
+pitestReportAggregate {
+    doLast {
+        def reportDir = layout.buildDirectory.dir("reports/pitest").get().asFile
+        def consolidatedReport = new File(reportDir, 'mutations.xml')
+        consolidatedReport.withWriter { writer ->
+            writer.write("<mutations>\n")
+            subprojects.each { subproject ->
+                def xmlReport = subproject.layout.buildDirectory.file("reports/pitest/mutations.xml").get().asFile
+                if (xmlReport.exists()) {
+                    def xmlContent = xmlReport.text
+                    xmlContent = xmlContent.replaceAll("<\\?xml[^>]*>", "")
+                    xmlContent = xmlContent.replaceAll("</?mutations( partial=\"true\")?>", "")
+                    writer.write(xmlContent.trim() + "\n")
+                }
+            }
+            writer.write("</mutations>")  // Cierra la etiqueta <mutations> al final
+        }
+    }
+}
+
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDirectory.set(layout.buildDirectory.dir("reports"))
+}
+
+tasks.register('jacocoMergedReport', JacocoReport) {
+    dependsOn = [test, subprojects.jacocoTestReport]
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+    reports {
+        xml.setRequired true
+        csv.setRequired false
+        html.setRequired true
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs = [
+            '-Amapstruct.suppressGeneratorTimestamp=true'
+    ]
+}
+
+tasks.named('wrapper') {
+    gradleVersion = '8.7'
+}

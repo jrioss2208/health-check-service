@@ -1,0 +1,22 @@
+server:
+  servlet:
+    context-path: "/health-check-service"
+  port: 8080
+spring:
+  application:
+    name: "health-check-service"
+  devtools:
+    add-properties: false
+
+management:
+  endpoint:
+    health:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    org.springframework.core.env: DEBUG
