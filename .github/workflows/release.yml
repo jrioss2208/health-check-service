@@ -1,62 +1,31 @@
-name: release-service
+name: Release
 
 on:
-  workflow_run:
-    workflows: ["build-service"]
-    types:
-      - completed
+  push:
+    branches:
+      - trunk
 
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'trunk' }}
-    name: Docker Build and Push to LocalStack
     runs-on: ubuntu-latest
-    services:
-      localstack:
-        image: localstack/localstack
-        ports:
-          - 4566:4566
-        env:
-          SERVICES: ecr,ecs
-          DEBUG: 1
-          DOCKER_HOST: unix:///var/run/docker.sock
 
     steps:
-      - name: Checkout code
+      - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-artifact
-          path: artifact
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Configure AWS CLI for LocalStack
+      - name: Configurar Docker
         run: |
-          aws configure set aws_access_key_id test
-          aws configure set aws_secret_access_key test
-          aws configure set default.region us-east-1
-        env:
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
+          echo "Simulando login a ECR"
+          echo "Simulando docker build"
+          docker build -t health-check-service:latest .
 
-      - name: Create ECR repo in LocalStack
+      - name: Simular push
         run: |
-          aws --endpoint-url=http://localhost:4566 ecr create-repository --repository-name local-ecr-repo || true
+          echo "Simulando push a ECR"
+          echo "docker tag health-check-service:latest fake-ecr-url/health-check-service:latest"
+          echo "docker push fake-ecr-url/health-check-service:latest"
 
-      - name: Build Docker image
+      - name: Simular despliegue a ECS
         run: |
-          docker build -t health-check-service -f deployment/Dockerfile .
-
-      - name: Tag and Push to ECR LocalStack
-        run: |
-          docker tag health-check-service localhost:4566/local-ecr-repo
-          docker push localhost:4566/local-ecr-repo || echo "Simulated push"
-
-      - name: Simulate ECS deploy
-        run: |
-          aws --endpoint-url=http://localhost:4566 ecs create-cluster --cluster-name local-ecs-cluster || true
-          echo "Simulated ECS deployment..."
+          echo "Simulando deploy a ECS"
+          echo "aws ecs update-service --cluster fake-cluster --service fake-service --force-new-deployment"
