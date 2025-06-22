@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    if: github.event.head_commit.message != 'Merge pull request'
+    # Solo ejecuta si NO es un merge automático de PR
+    if: >
+      github.event_name == 'push' &&
+      !startsWith(github.event.head_commit.message, 'Merge pull request')
     runs-on: ubuntu-latest
     name: Build and Test
 
