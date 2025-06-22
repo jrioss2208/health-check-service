@@ -3,6 +3,7 @@ name: build-service
 on:
   push:
     branches:
+      - trunk
       - 'feature/**'
 
 jobs:
