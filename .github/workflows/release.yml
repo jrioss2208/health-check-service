@@ -13,17 +13,20 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
+      - name: Set Docker image name
+        run: echo "IMAGE_TAG=app-artifact-${{ github.run_number }}" >> $GITHUB_ENV
+
       - name: Configurar Docker
         run: |
           echo "Simulando login a ECR"
           echo "Simulando docker build"
-          docker build -t health-check-service:latest .
+          docker build -t health-check-service:$IMAGE_TAG .
 
       - name: Simular push
         run: |
           echo "Simulando push a ECR"
-          echo "docker tag health-check-service:latest fake-ecr-url/health-check-service:latest"
-          echo "docker push fake-ecr-url/health-check-service:latest"
+          echo "docker tag health-check-service:$IMAGE_TAG fake-ecr-url/health-check-service:$IMAGE_TAG"
+          echo "docker push fake-ecr-url/health-check-service:$IMAGE_TAG"
 
       - name: Simular despliegue a ECS
         run: |
