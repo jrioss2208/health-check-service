@@ -7,9 +7,6 @@ on:
 
 jobs:
   build:
-    if: >
-      github.event_name == 'push' &&
-      github.actor != 'web-flow'
     runs-on: ubuntu-latest
     name: Build and Test
 
