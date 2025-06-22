@@ -8,10 +8,9 @@ on:
 
 jobs:
   build:
-    # Solo ejecuta si NO es un merge automático de PR
     if: >
       github.event_name == 'push' &&
-      !startsWith(github.event.head_commit.message, 'Merge pull request')
+      github.actor != 'web-flow'
     runs-on: ubuntu-latest
     name: Build and Test
 
