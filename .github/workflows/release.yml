@@ -2,8 +2,7 @@ name: Release
 
 on:
   pull_request:
-    types:
-      - closed
+    types: [closed]
     branches:
       - trunk
 
@@ -33,5 +32,5 @@ jobs:
 
       - name: Simular despliegue a ECS
         run: |
-          echo "Simulando deploy a ECS con imagen: $IMAGE_TAG"
+          echo "Simulando deploy a ECS"
           echo "aws ecs update-service --cluster fake-cluster --service fake-service --force-new-deployment"

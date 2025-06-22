@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - trunk
-  pull_request:
-    types: [opened, synchronize]
-    branches:
-      - trunk
+      - 'feature/**'
 
 jobs:
   build:
+    if: github.event.head_commit.message != 'Merge pull request'
     runs-on: ubuntu-latest
     name: Build and Test
 
