@@ -82,3 +82,33 @@ jobs:
         with:
           name: AcceptanceTest
           path: deployment/health-check-acceptance-soapui.xml
+
+  acceptance-test:
+    needs: release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Run Acceptance Tests
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Descargar artefacto de pruebas de aceptación
+        uses: actions/download-artifact@v4
+        with:
+          name: AcceptanceTest
+          path: acceptance-tests/
+
+      - name: Instalar SoapUI CLI
+        run: |
+          wget https://s3.amazonaws.com/downloads.eviware/soapuios/5.7.0/SoapUI-5.7.0-linux-bin.tar.gz
+          tar -xvzf SoapUI-5.7.0-linux-bin.tar.gz
+          chmod +x SoapUI-5.7.0/bin/testrunner.sh
+
+      - name: Ejecutar prueba de aceptación
+        run: |
+          ./SoapUI-5.7.0/bin/testrunner.sh \
+            -r \
+            -j \
+            -f ./acceptance-tests/report \
+            ./acceptance-tests/health-check-acceptance-soapui.xml
