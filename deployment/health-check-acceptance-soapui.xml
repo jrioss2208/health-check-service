@@ -1,0 +1,63 @@
+<soapui-project xmlns="http://eviware.com/soapui/config/"
+                xmlns:con="http://eviware.com/soapui/config/"
+                activeEnvironment="Default"
+                name="Health-Check-Acceptance"
+                resourceRoot=""
+                soapui-version="5.7.0">
+    <con:settingsFile>Health-Check-Acceptance-soapui-settings.xml</con:settingsFile>
+    <con:interface xsi:type="con:RestService" wadlVersion="http://wadl.dev.java.net/2009/02" name="Health-Check-Service" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <con:endpoints>
+            <con:endpoint>http://localhost:8080/health-check-service</con:endpoint>
+        </con:endpoints>
+        <con:resource name="/health" path="/health">
+            <con:method name="GET" method="GET">
+                <con:request name="Request 1" mediaType="application/json">
+                    <con:settings>
+                        <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting>
+                    </con:settings>
+                </con:request>
+            </con:method>
+        </con:resource>
+    </con:interface>
+    <con:testSuite name="TestSuite 1">
+        <con:settings/>
+        <con:runType>SEQUENTIAL</con:runType>
+        <con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true">
+            <con:settings/>
+            <con:testStep type="request" name="Health Check">
+                <con:settings/>
+                <con:config xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                    <con:restRequest name="Health Check" mediaType="application/json" method="GET" postQueryString="false">
+                        <con:settings>
+                            <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting>
+                        </con:settings>
+                        <con:endpoint>http://localhost:8080/health-check-service</con:endpoint>
+                        <con:resourcePath>/health</con:resourcePath>
+                        <con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes">
+                            <con:configuration>
+                                <codes>200</codes>
+                            </con:configuration>
+                        </con:assertion>
+                        <con:assertion type="JsonPath Match" name="JSONPath Match - status equals OK">
+                            <con:configuration>
+                                <path>$.status</path>
+                                <content>OK</content>
+                                <allowWildcards>false</allowWildcards>
+                                <ignoreNamspaceDifferences>false</ignoreNamspaceDifferences>
+                                <ignoreComments>false</ignoreComments>
+                                <xsl:ignore xmlns:xsl="http://www.w3.org/1999/XSL/Transform">false</xsl:ignore>
+                            </con:configuration>
+                        </con:assertion>
+                    </con:restRequest>
+                </con:config>
+            </con:testStep>
+            <con:properties/>
+        </con:testCase>
+    </con:testSuite>
+    <con:requirements/>
+    <con:properties/>
+    <con:wssContainer/>
+    <con:oAuth2ProfileContainer/>
+    <con:oAuth1ProfileContainer/>
+    <con:sensitiveInformation/>
+</soapui-project>
