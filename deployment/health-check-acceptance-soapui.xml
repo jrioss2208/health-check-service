@@ -1,5 +1,5 @@
-<soapui-project xmlns="http://eviware.com/soapui/config/"
-                xmlns:con="http://eviware.com/soapui/config/"
+<soapui-project xmlns="http://eviware.com/soapui/config"
+                xmlns:con="http://eviware.com/soapui/config"
                 activeEnvironment="Default"
                 name="Health-Check-Acceptance"
                 resourceRoot=""
