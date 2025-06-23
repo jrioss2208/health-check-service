@@ -76,3 +76,9 @@ jobs:
         run: |
           echo "Simulando deploy a ECS"
           echo "aws ecs update-service --cluster fake-cluster --service fake-service --force-new-deployment"
+
+      - name: Subir pruebas de aceptación como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: AcceptanceTest
+          path: deployment/health-check-acceptance-soapui.xml
