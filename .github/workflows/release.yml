@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "Simulando login a ECR"
           echo "Simulando docker build"
-          docker build -t health-check-service:$IMAGE_TAG -f deployment/DockerFile .
+          docker build -t health-check-service:$IMAGE_TAG -f deployment/Dockerfile .
 
       - name: Simular push
         run: |
