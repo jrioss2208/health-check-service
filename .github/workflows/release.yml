@@ -15,28 +15,33 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Descargar artifact
+      - name: Descargar artifact del build
         uses: actions/download-artifact@v4
         with:
-          name: app-artifact-${{ github.run_number }}
+          name: app-artifact
           path: build/libs
 
-      - name: Set Docker image name
-        run: echo "IMAGE_TAG=app-artifact-${{ github.run_number }}" >> $GITHUB_ENV
+      - name: Renombrar .jar para Docker
+        run: |
+          JAR_ORIGINAL=$(ls build/libs/*.jar | head -n 1)
+          cp "$JAR_ORIGINAL" build/libs/health-check-service.jar
 
-      - name: Configurar Docker
+      - name: Set Docker image name
+        run: echo "IMAGE_TAG=release-${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: Simular Docker build
         run: |
           echo "Simulando login a ECR"
           echo "Simulando docker build"
           docker build -t health-check-service:$IMAGE_TAG -f deployment/Dockerfile .
 
-      - name: Simular push
+      - name: Simular push a ECR
         run: |
           echo "Simulando push a ECR"
           echo "docker tag health-check-service:$IMAGE_TAG fake-ecr-url/health-check-service:$IMAGE_TAG"
           echo "docker push fake-ecr-url/health-check-service:$IMAGE_TAG"
 
-      - name: Simular despliegue a ECS
+      - name: Simular deploy en ECS
         run: |
           echo "Simulando deploy a ECS"
           echo "aws ecs update-service --cluster fake-cluster --service fake-service --force-new-deployment"

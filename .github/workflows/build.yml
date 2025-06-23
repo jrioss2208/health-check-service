@@ -26,15 +26,13 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build test
 
-      - name: Rename artifact with run number
+      - name: Copiar .jar a directorio temporal
         run: |
           mkdir -p artifact
-          JAR_NAME=app-artifact-${{ github.run_number }}.jar
-          cp applications/app-service/build/libs/*.jar artifact/$JAR_NAME
-          echo "JAR_NAME=$JAR_NAME" >> $GITHUB_ENV
+          cp applications/app-service/build/libs/*.jar artifact/
 
-      - name: Upload Artifact
+      - name: Subir artifact fijo
         uses: actions/upload-artifact@v4
         with:
-          name: app-artifact-${{ github.run_number }}
+          name: app-artifact
           path: artifact/
