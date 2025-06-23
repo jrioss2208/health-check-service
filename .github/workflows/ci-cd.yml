@@ -1,15 +1,52 @@
-name: Release
+name: CI-CD Pipeline
 
 on:
+  push:
+    branches:
+      - 'feature/**'
   pull_request:
     types: [closed]
     branches:
       - trunk
 
 jobs:
+  build:
+    if: startsWith(github.ref, 'refs/heads/feature/')
+    runs-on: ubuntu-latest
+    name: Build and Test
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean build test
+
+      - name: Copiar .jar a directorio temporal
+        run: |
+          mkdir -p artifact
+          cp applications/app-service/build/libs/*.jar artifact/
+
+      - name: Subir artifact fijo
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-artifact
+          path: artifact/
+
   release:
     if: github.event.pull_request.merged == true
+    needs: build
     runs-on: ubuntu-latest
+    name: Release to ECS
 
     steps:
       - name: Checkout código
@@ -41,7 +78,7 @@ jobs:
           echo "docker tag health-check-service:$IMAGE_TAG fake-ecr-url/health-check-service:$IMAGE_TAG"
           echo "docker push fake-ecr-url/health-check-service:$IMAGE_TAG"
 
-      - name: Simular deploy en ECS
+      - name: Simular deploy a ECS
         run: |
           echo "Simulando deploy a ECS"
           echo "aws ecs update-service --cluster fake-cluster --service fake-service --force-new-deployment"
