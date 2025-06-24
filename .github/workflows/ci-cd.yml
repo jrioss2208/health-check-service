@@ -112,3 +112,31 @@ jobs:
             -j \
             -f ./acceptance-tests/report \
             ./acceptance-tests/health-check-acceptance-soapui.xml
+
+  performance-test:
+    needs: release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Run Performance Tests
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jmeter
+
+      - name: Ejecutar prueba de performance
+        run: |
+          jmeter -n \
+            -t deployment/Test/performance-test.jmx \
+            -l deployment/Test/results.jtl \
+            -e -o deployment/Test/report
+
+      - name: Subir reporte de performance como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: PerformanceReport
+          path: deployment/Test/report
